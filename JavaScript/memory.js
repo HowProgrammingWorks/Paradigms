@@ -1,32 +1,49 @@
-'use strict';
+using System;
+using System.Threading;
 
-const createPoint = (x, y) => {
-  const SIZE = 8;
-  const buffer = new SharedArrayBuffer(SIZE);
-  const view = new Int32Array(buffer);
-  view[0] = x;
-  view[1] = y;
-  const move = (dx, dy) => {
-    Atomics.add(view, 0, dx);
-    Atomics.add(view, 1, dy);
-  };
-  const clone = () => {
-    const x = Atomics.load(view, 0);
-    const y = Atomics.load(view, 1);
-    return createPoint(x, y);
-  };
-  const toString = () => {
-    const x = Atomics.load(view, 0);
-    const y = Atomics.load(view, 1);
-    return `(${x}, ${y})`;
-  };
-  return { move, clone, toString };
-};
+public class Point
+{
+    private int x;
+    private int y;
 
-// Usage
+    public Point(int _x, int _y)
+    {
+        x = _x;
+        y = _y;
+    }
 
-const p1 = createPoint(10, 20);
-console.log(p1.toString());
-const c1 = p1.clone(p1);
-c1.move(-5, 10);
-console.log(c1.toString());
+    public void Move(int dx, int dy)
+    {
+        // Атомарне додавання (CAS-подібна операція)
+        Interlocked.Add(ref x, dx);
+        Interlocked.Add(ref y, dy);
+    }
+
+    public Point Clone()
+    {
+        // Атомарне читання значень
+        int currentX = Interlocked.CompareExchange(ref x, 0, 0);
+        int currentY = Interlocked.CompareExchange(ref y, 0, 0);
+        return new Point(currentX, currentY);
+    }
+
+    public override string ToString()
+    {
+        // Атомарне читання значень
+        int currentX = Interlocked.CompareExchange(ref x, 0, 0);
+        int currentY = Interlocked.CompareExchange(ref y, 0, 0);
+        return $"({currentX}, {currentY})";
+    }
+}
+class Program
+{
+    static void Main()
+    {
+        var p1 = new Point(10, 20);
+        Console.WriteLine(p1.ToString());
+
+        var c1 = p1.Clone();
+        c1.Move(-5, 10);
+        Console.WriteLine(c1.ToString());
+    }
+}
