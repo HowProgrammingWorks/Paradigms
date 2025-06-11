@@ -1,31 +1,40 @@
 'use strict';
 
-class Point {
-  static SIZE = 8;
+const PointValidator = require('../Utils/point-validator');
 
-  constructor(x, y, view = null) {
-    const buffer = new SharedArrayBuffer(Point.SIZE);
-    this.view = new Int32Array(buffer);
-    if (view) {
-      this.view.set(view);
+class Point {
+  static BUFFER_SIZE = 8;
+  #coordinates;
+  #xIndex = 0;
+  #yIndex = 1;
+  #initialXCoordinates = 0;
+  #initialYCoordinates = 0;
+
+  constructor(initialX, initialY, sharedCoordinates = null) {
+    PointValidator.validateCoordinates(initialX, initialY);
+    const buffer = new SharedArrayBuffer(Point.BUFFER_SIZE);
+    this.#coordinates = new Int32Array(buffer);
+    if (sharedCoordinates) {
+      this.#coordinates.set(sharedCoordinates);
     } else {
-      this.view[0] = x;
-      this.view[1] = y;
+      this.#coordinates[this.#xIndex] = initialX;
+      this.#coordinates[this.#yIndex] = initialY;
     }
   }
 
-  move(x, y) {
-    Atomics.add(this.view, 0, x);
-    Atomics.add(this.view, 1, y);
+  move(deltaX, deltaY) {
+    PointValidator.validateCoordinates(deltaX, deltaY);
+    Atomics.add(this.#coordinates, this.#xIndex, deltaX);
+    Atomics.add(this.#coordinates, this.#yIndex, deltaY);
   }
 
   clone() {
-    return new Point(0, 0, this.view);
+    return new Point(this.#initialXCoordinates, this.#initialYCoordinates, this.#coordinates);
   }
 
   toString() {
-    const x = Atomics.load(this.view, 0);
-    const y = Atomics.load(this.view, 1);
+    const x = Atomics.load(this.#coordinates, this.#xIndex);
+    const y = Atomics.load(this.#coordinates, this.#yIndex);
     return `(${x}, ${y})`;
   }
 }
