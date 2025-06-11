@@ -3,106 +3,130 @@ https://github.com/HowProgrammingWorks/Paradigms
 з використанням патерну Composite: https://github.com/HowProgrammingWorks/Composite
 */
 
-class AbstractShape {
+class Point {
+  #x;
+  #y;
+
+  constructor(x, y) {
+    this.#x = x;
+    this.#y = y;
+  }
+
+  move(dx, dy) {
+    this.#x += dx;
+    this.#y += dy;
+  }
+
+  clone() {
+    return new Point(this.#x, this.#y);
+  }
+
+  toString() {
+    return `(${this.#x}, ${this.#y})`;
+  }
+}
+
+class Shape {
   constructor() {
-    if (new.target === AbstractShape) {
-      throw new Error('Cannot instantiate AbstractShape directly');
+    if (new.target === Shape) {
+      throw new Error('Cannot instantiate abstract Shape');
     }
   }
 
   move(dx, dy) {
-    throw new Error('Method move() must be implemented');
+    throw new Error('move() must be implemented');
   }
 
   clone() {
-    throw new Error('Method clone() must be implemented');
+    throw new Error('clone() must be implemented');
   }
 
   toString() {
-    throw new Error('Method toString() must be implemented');
+    throw new Error('toString() must be implemented');
   }
 }
 
-class PointShape extends AbstractShape {
-  constructor(x, y) {
+class Polyline extends Shape {
+  #name;
+  #components = [];
+
+  constructor(name) {
     super();
-    this.x = x;
-    this.y = y;
+    this.#name = name;
+  }
+
+  add(component) {
+    if (!(component instanceof Point || component instanceof Shape)) {
+      throw new Error('Component must be a Point or Shape');
+    }
+    this.#components.push(component);
+  }
+
+  remove(component) {
+    const index = this.#components.indexOf(component);
+    if (index !== -1) {
+      this.#components.splice(index, 1);
+    }
   }
 
   move(dx, dy) {
-    this.x += dx;
-    this.y += dy;
+    this.#components.forEach(c => c.move(dx, dy));
   }
 
   clone() {
-    return new PointShape(this.x, this.y);
+    const copy = new Polyline(this.#name);
+    this.#components.forEach(c => copy.add(c.clone()));
+    return copy;
   }
 
   toString() {
-    return `(${this.x}, ${this.y})`;
+    const parts = this.#components.map(c => c.toString()).join(' -> ');
+    return `[Polyline "${this.#name}": ${parts}]`;
   }
 }
 
-class LineShape extends AbstractShape {
-  constructor(startPoint, endPoint) {
-    super();
-    this.start = startPoint;
-    this.end = endPoint;
+class Line {
+  #start;
+  #end;
+
+  constructor(start, end) {
+    if (!(start instanceof Point && end instanceof Point)) {
+      throw new Error('Line requires two Points');
+    }
+    this.#start = start;
+    this.#end = end;
   }
 
   move(dx, dy) {
-    this.start.move(dx, dy);
-    this.end.move(dx, dy);
+    this.#start.move(dx, dy);
+    this.#end.move(dx, dy);
   }
 
   clone() {
-    return new LineShape(this.start.clone(), this.end.clone());
+    return new Line(this.#start.clone(), this.#end.clone());
   }
 
   toString() {
-    return `[Line: ${this.start.toString()} -> ${this.end.toString()}]`;
+    return `[Line: ${this.#start.toString()} -> ${this.#end.toString()}]`;
   }
 }
 
-class PolylineShape extends AbstractShape {
-  constructor(name, ...points) {
-    super();
-    this.name = name;
-    this.points = points;
-  }
-
-  move(dx, dy) {
-    this.points.forEach(pt => pt.move(dx, dy));
-  }
-
-  clone() {
-    return new PolylineShape(
-      this.name,
-      ...this.points.map(pt => pt.clone())
-    );
-  }
-
-  toString() {
-    const pts = this.points.map(pt => pt.toString()).join(' -> ');
-    return `[Polyline "${this.name}": ${pts}]`;
-  }
-}
 
 // Usage
 
-(async () => {
-  const a = new PointShape(1, 2);
-  const b = new PointShape(3, 4);
-  const c = new PointShape(5, 6);
+const a = new Point(1, 2);
+const b = new Point(3, 4);
+const c = new Point(5, 6);
 
-  const line2 = new LineShape(a, b);
-  console.log(line2.toString());
+const line = new Line(a, b);
+console.log(line.toString());
 
-  const poly2 = new PolylineShape('Route', a, b, c);
-  console.log(poly2.toString());
+const route = new Polyline('Route');
+route.add(a);
+route.add(b);
+route.add(c);
+console.log(route.toString());
 
-  const moved = poly2.clone();
-  moved.move(-1, -2);
-  console.log(moved.toString());
-})();
+const movedRoute = route.clone();
+movedRoute.move(-1, -2);
+console.log(movedRoute.toString());
