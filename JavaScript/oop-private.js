@@ -34,6 +34,7 @@ class Point {
   move(x, y) {
     this.#x += x;
     this.#y += y;
+    return this;  // Something relative to builder pattern if we use it together with clone method
   }
 
   clone() {
@@ -53,7 +54,14 @@ const c1 = p1.clone();
 c1.move(-5, 10);
 console.log(c1.toString());
 
-// Creation of instance using static methods
+// Ecample of Factory pattern. Creation of instance using static methods
 const p2 = Point.createCartesian(20, 30);
 const p3 = Point.createPolar(5, Math.PI * 2);
+
+// Example of Builder pattern
+
+const p4 = p2.move(17,18).move(60, 20).clone();
+
+
+
 
