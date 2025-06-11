@@ -1,32 +1,63 @@
 'use strict';
 
-class Point {
+const isNode = typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+
+let EventTargetClass;
+if (isNode) {
+  const { EventEmitter } = require('events');
+  class NodeEventTarget {
+    constructor() {
+      this.emitter = new EventEmitter();
+    }
+    addEventListener(event, listener) {
+      this.emitter.on(event, listener);
+    }
+    removeEventListener(event, listener) {
+      this.emitter.off(event, listener);
+    }
+    dispatchEvent(event) {
+      this.emitter.emit(event.type, event);
+    }
+  }
+  EventTargetClass = NodeEventTarget;
+} else {
+  EventTargetClass = EventTarget; 
+}
+
+class Point extends EventTargetClass {
   #x;
   #y;
-  #queue = [];
-  #processing = false;
 
   constructor(x, y) {
+    super();
     this.#x = x;
     this.#y = y;
   }
 
-  #move(x, y) {
-    this.#x += x;
-    this.#y += y;
+  move(dx, dy) {
+    this.#x += dx;
+    this.#y += dy;
+    this.dispatchEvent(new CustomEvent('updated', { detail: { x: this.#x, y: this.#y } }));
   }
 
-  #clone() {
-    return new Point(this.#x, this.#y);
+  clone() {
+    const clone = new Point(this.#x, this.#y);
+    this.dispatchEvent(new CustomEvent('cloned', { detail: clone }));
+    return clone;
   }
 
-  #toString() {
+  toString() {
     return `(${this.#x}, ${this.#y})`;
   }
+}
 
-  async send(message) {
-    return new Promise((resolve) => {
-      this.#queue.push({ ...message, resolve });
+class QueueProcessor {
+  #queue = [];
+  #processing = false;
+
+  enqueue(task) {
+    return new Promise((resolve, reject) => {
+      this.#queue.push({ task, resolve, reject });
       this.#process();
     });
   }
@@ -35,23 +66,76 @@ class Point {
     if (this.#processing) return;
     this.#processing = true;
     while (this.#queue.length) {
-      const { method, x, y, resolve } = this.#queue.shift();
-      if (method === 'move') resolve(this.#move(x, y));
-      if (method === 'clone') resolve(this.#clone());
-      if (method === 'toString') resolve(this.#toString());
+      const { task, resolve, reject } = this.#queue.shift();
+      try {
+        const result = await task();
+        resolve(result);
+      } catch (err) {
+        reject(err);
+      }
     }
     this.#processing = false;
   }
 }
 
-// Usage
+class PointActor {
+  #point;
+  #queueProcessor;
+
+  constructor(point) {
+    this.#point = point;
+    this.#queueProcessor = new QueueProcessor();
+  }
+
+  addEventListener(event, listener) {
+    this.#point.addEventListener(event, listener);
+  }
+
+  removeEventListener(event, listener) {
+    this.#point.removeEventListener(event, listener);
+  }
+
+  send(message) {
+    return this.#queueProcessor.enqueue(() => {
+      const { method, args = [] } = message;
+      if (typeof this.#point[method] === 'function') {
+        return this.#point[method](...args);
+      } else {
+        throw new Error(`Method "${method}" not found on Point.`);
+      }
+    });
+  }
+}
+
 
 const main = async () => {
-  const p1 = new Point(10, 20);
-  console.log(await p1.send({ method: 'toString' }));
-  const c1 = await p1.send({ method: 'clone' });
-  await c1.send({ method: 'move', x: -5, y: 10 });
-  console.log(await c1.send({ method: 'toString' }));
+  const p = new Point(10, 20);
+  const actor = new PointActor(p);
+
+  actor.addEventListener('updated', (e) => {
+    const { x, y } = e.detail;
+    console.log(`[Observer] Point updated: (${x}, ${y})`);
+  });
+
+  actor.addEventListener('cloned', (e) => {
+    const clone = e.detail;
+    console.log(`[Observer] Point cloned: ${clone.toString()}`);
+    const cloneActor = new PointActor(clone);
+    cloneActor.addEventListener('updated', (ev) => {
+      const { x, y } = ev.detail;
+      console.log(`[Observer] Clone updated: (${x}, ${y})`);
+    });
+
+    cloneActor.send({ method: 'move', args: [-5, 10] }).then(() => {
+      cloneActor.send({ method: 'toString' }).then(console.log);
+    });
+  });
+
+  console.log(await actor.send({ method: 'toString' })); 
+  await actor.send({ method: 'move', args: [5, 5] });    
+  console.log(await actor.send({ method: 'toString' })); 
+
+  const clone = await actor.send({ method: 'clone' });    
 };
 
 main();
