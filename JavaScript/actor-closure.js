@@ -1,30 +1,10 @@
 'use strict';
 
-const createActor = (Entity, ...args) => {
-  const queue = [];
-  let processing = false;
-  const state = new Entity(...args);
-
-  const process = async () => {
-    if (processing) return;
-    processing = true;
-    while (queue.length) {
-      const { method, args, resolve } = queue.shift();
-      if (typeof state[method] === 'function') {
-        const result = await state[method](...args);
-        resolve(result);
-      }
-    }
-    processing = false;
-  };
-
-  const send = async ({ method, args = [] }) => new Promise((resolve) => {
-    queue.push({ method, args, resolve });
-    process();
-  });
-
-  return { send, process };
-};
+class Observer {
+  update(subject, data) {
+    console.log(`[Observer] ${subject.constructor.name} changed:`, data);
+  }
+}
 
 class Point {
   constructor(x, y) {
@@ -32,13 +12,10 @@ class Point {
     this.y = y;
   }
 
-  move(x, y) {
-    this.x += x;
-    this.y += y;
-  }
-
-  clone() {
-    return createActor(Point, this.x, this.y);
+  move(dx, dy) {
+    this.x += dx;
+    this.y += dy;
+    return this.toString();
   }
 
   toString() {
@@ -46,14 +23,84 @@ class Point {
   }
 }
 
-// Usage
+class ObservablePoint {
+  constructor(x, y) {
+    this.point = new Point(x, y);
+    this.observers = [];
+  }
+
+  addObserver(observer) {
+    this.observers.push(observer);
+  }
+
+  notify(method, ...args) {
+    for (const obs of this.observers) {
+      obs.update(this, { method, args, state: this.point.toString() });
+    }
+  }
+
+  move(dx, dy) {
+    const result = this.point.move(dx, dy);
+    this.notify('move', dx, dy);
+    return result;
+  }
+
+  toString() {
+    return this.point.toString();
+  }
+
+  clone() {
+    const cloned = new ObservablePoint(this.point.x, this.point.y);
+    this.observers.forEach(obs => cloned.addObserver(obs));
+    return cloned;
+  }
+}
+
+class Actor {
+  constructor(entity) {
+    this.entity = entity;
+    this.queue = [];
+    this.processing = false;
+  }
+
+  async send({ method, args = [] }) {
+    return new Promise((resolve) => {
+      this.queue.push({ method, args, resolve });
+      this._processQueue();
+    });
+  }
+
+  async _processQueue() {
+    if (this.processing) return;
+    this.processing = true;
+    while (this.queue.length > 0) {
+      const { method, args, resolve } = this.queue.shift();
+      const fn = this.entity[method];
+      if (typeof fn === 'function') {
+        const result = await fn.apply(this.entity, args);
+        resolve(result);
+      } else {
+        resolve(undefined);
+      }
+    }
+    this.processing = false;
+  }
+}
 
 const main = async () => {
-  const p1 = createActor(Point, 10, 20);
-  console.log(await p1.send({ method: 'toString' }));
-  const c1 = await p1.send({ method: 'clone' });
-  await c1.send({ method: 'move', args: [-5, 10] });
-  console.log(await c1.send({ method: 'toString' }));
+  const observer = new Observer();
+
+  const p1 = new ObservablePoint(10, 20);
+  p1.addObserver(observer);
+
+  const actorP1 = new Actor(p1);
+  console.log(await actorP1.send({ method: 'toString' }));
+
+  const clone = await actorP1.send({ method: 'clone' });
+  const actorClone = new Actor(clone);
+
+  await actorClone.send({ method: 'move', args: [-5, 10] });
+  console.log(await actorClone.send({ method: 'toString' }));
 };
 
 main();

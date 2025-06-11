@@ -1,8 +1,15 @@
 'use strict';
 
+const { EventEmitter } = require('events');
+
 class Actor {
   #queue = [];
   #processing = false;
+  #entity;
+
+  constructor(entity) {
+    this.#entity = entity;
+  }
 
   async send({ method, args = [] }) {
     return new Promise((resolve) => {
@@ -16,16 +23,19 @@ class Actor {
     this.#processing = true;
     while (this.#queue.length) {
       const { method, args, resolve } = this.#queue.shift();
-      if (typeof this[method] === 'function') {
-        const result = await this[method](...args);
+      if (typeof this.#entity[method] === 'function') {
+        const result = await this.#entity[method](...args);
         resolve(result);
+      } else {
+        console.warn(`Method "${method}" not found on entity.`);
+        resolve(undefined);
       }
     }
     this.#processing = false;
   }
 }
 
-class Point extends Actor {
+class Point extends EventEmitter {
   #x;
   #y;
 
@@ -35,13 +45,16 @@ class Point extends Actor {
     this.#y = y;
   }
 
-  move(x, y) {
-    this.#x += x;
-    this.#y += y;
+  move(dx, dy) {
+    this.#x += dx;
+    this.#y += dy;
+    this.emit('updated', { x: this.#x, y: this.#y });
   }
 
   clone() {
-    return new Point(this.#x, this.#y);
+    const clone = new Point(this.#x, this.#y);
+    this.emit('cloned', clone);
+    return clone;
   }
 
   toString() {
@@ -49,14 +62,30 @@ class Point extends Actor {
   }
 }
 
-// Usage
 
 const main = async () => {
-  const p1 = new Point(10, 20);
-  console.log(await p1.send({ method: 'toString' }));
-  const c1 = await p1.send({ method: 'clone' });
-  await c1.send({ method: 'move', args: [-5, 10] });
-  console.log(await c1.send({ method: 'toString' }));
+  const pRaw = new Point(10, 20);
+  const pActor = new Actor(pRaw);
+
+  pRaw.on('updated', ({ x, y }) => {
+    console.log(`[Observer] pRaw оновлено: (${x}, ${y})`);
+  });
+
+  pRaw.on('cloned', (clone) => {
+    console.log(`[Observer] Створено клон: ${clone.toString()}`);
+  });
+
+  console.log(await pActor.send({ method: 'toString' }));
+
+  const cloneRaw = await pActor.send({ method: 'clone' });
+  const cloneActor = new Actor(cloneRaw);
+
+  cloneRaw.on('updated', ({ x, y }) => {
+    console.log(`[Observer] Клон оновлено: (${x}, ${y})`);
+  });
+
+  await cloneActor.send({ method: 'move', args: [-5, 10] });
+  console.log(await cloneActor.send({ method: 'toString' }));
 };
 
 main();
