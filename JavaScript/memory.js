@@ -27,6 +27,6 @@ const createPoint = (x, y) => {
 
 const p1 = createPoint(10, 20);
 console.log(p1.toString());
-const c1 = p1.clone(p1);
+const c1 = p1.clone();
 c1.move(-5, 10);
 console.log(c1.toString());
