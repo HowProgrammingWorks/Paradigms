@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "moduleDetection": "force",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "./JavaScript",
+    "rootDir": "./JavaScript",
+    "allowSyntheticDefaultImports": false,
+    "isolatedModules": true,
+    "pretty": true
+  },
+  "include": ["JavaScript/*.ts"],
+  "exclude": ["node_modules"]
+}

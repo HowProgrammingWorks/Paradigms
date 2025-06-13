@@ -3,13 +3,15 @@
   "version": "1.0.0",
   "scripts": {
     "lint": "eslint . || prettier -c \"**/*.js\"",
-    "fix": "eslint . --fix || prettier --write \"**/*.js\""
+    "fix": "eslint . --fix || prettier --write \"**/*.js\"",
+    "build": "tsc; prettier --write \"**/*.js\""
   },
   "author": "Timur Shemsedinov",
   "private": true,
   "dependencies": {
-    "eslint": "^9.12.0",
-    "eslint-config-metarhia": "^9.1.1",
-    "prettier": "^3.3.3"
+    "eslint": "^9.28.0",
+    "eslint-config-metarhia": "^9.1.2",
+    "prettier": "^3.3.3",
+    "typescript": "^5.8.3"
   }
 }
