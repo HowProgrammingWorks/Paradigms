@@ -1,6 +1,6 @@
 'use strict';
 
-class Ownership {
+class Box {
   #value = undefined;
 
   constructor(value) {
@@ -15,65 +15,82 @@ class Ownership {
   move() {
     const val = this.get();
     this.#value = undefined;
-    return new Ownership(val);
+    return new Box(val);
   }
 
   [Symbol.dispose]() {
     this.#value = undefined;
-    this.drop();
   }
 }
 
-const implement = (target, trait, callable) => {
-  target[trait] = callable;
-};
+class Trait {
+  static #registry = new Map();
+  #implementations = new WeakMap();
 
-const invoke = (target, trait, ...args) => {
-  if (typeof target !== 'object') {
-    throw new TypeError(`Target is not defiled`);
+  constructor(name) {
+    this.name = name;
+    Trait.#registry.set(name, this);
   }
-  if (typeof trait !== 'symbol') {
-    throw new TypeError(`Trait is not defiled`);
+
+  static for(name) {
+    return Trait.#registry.get(name) || new Trait(name);
   }
-  const callable = target[trait];
-  if (typeof callable === 'function') {
+
+  implement(target, callable) {
+    if (typeof target !== 'object') {
+      throw new TypeError(`Target is not Object`);
+    }
+    if (typeof callable !== 'function') {
+      throw new TypeError(`Callable is not Function`);
+    }
+    this.#implementations.set(target, callable);
+  }
+
+  invoke(box, ...args) {
+    const target = box.get();
+    const callable = this.#implementations.get(target);
+    if (callable === undefined) {
+      throw new Error(`Trait not implementemented: ${this.name}`);
+    }
     return callable(...args);
   }
-  const name = Symbol.keyFor(trait);
-  throw new TypeError(`Trait not implementemented: ${name}`);
-};
+}
+
+const Clonable = Trait.for('Clonable');
+const Movable = Trait.for('Movable');
+const Serializable = Trait.for('Serializable');
 
 const createPoint = (x, y) => {
-  using point = new Ownership({ x, y });
+  using point = new Box({ x, y });
   const self = Object.create(null);
 
-  implement(self, Symbol.for('Clonable'), () => {
+  Clonable.implement(self, () => {
     const { x, y } = point.get();
     return createPoint(x, y);
   });
 
-  implement(self, Symbol.for('Movable'), (d) => {
+  Movable.implement(self, (d) => {
     const p = point.get();
     return createPoint(p.x + d.x, p.y + d.y);
   });
 
-  implement(self, Symbol.for('Serializable'), () => {
+  Serializable.implement(self, () => {
     const { x, y } = point.get();
     return `(${x}, ${y})`;
   });
 
-  return self;
+  return new Box(self);
 };
 
 // Usage
 
-const main = async () => {
-  const p1 = createPoint(10, 20);
-  console.log(invoke(p1, Symbol.for('Serializable')));
-  const c0 = invoke(p1, Symbol.for('Clonable'));
-  console.log(invoke(c0, Symbol.for('Serializable')));
-  const c1 = invoke(c0, Symbol.for('Movable'), { x: -5, y: 10 });
-  console.log(invoke(c1, Symbol.for('Serializable')));
+const main = () => {
+  using p1 = createPoint(10, 20);
+  console.log(Serializable.invoke(p1));
+  using c0 = Clonable.invoke(p1);
+  console.log(Serializable.invoke(c0));
+  using c1 = Movable.invoke(c0, { x: -5, y: 10 });
+  console.log(Serializable.invoke(c1));
 };
 
 main();
