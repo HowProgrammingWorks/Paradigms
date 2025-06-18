@@ -68,7 +68,6 @@ const c1 = c0.chain((monad) =>
   IO.of(() => Monad.of(move({ x: -5, y: 10 })).ap(monad)),
 );
 
-c1
-  .chain((monad) => monad.chain(toString))
+c1.chain((monad) => monad.chain(toString))
   .map(console.log)
   .run();

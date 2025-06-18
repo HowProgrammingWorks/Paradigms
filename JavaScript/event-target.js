@@ -38,7 +38,6 @@ class Point {
 
 // Usage
 
-
 const p1 = new Point({ x: 10, y: 20 });
 p1.emit('toString', { callback: console.log });
 p1.emit('clone', {

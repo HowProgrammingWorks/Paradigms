@@ -18,10 +18,11 @@ const createActor = (Entity, ...args) => {
     processing = false;
   };
 
-  const send = async ({ method, args = [] }) => new Promise((resolve) => {
-    queue.push({ method, args, resolve });
-    process();
-  });
+  const send = async ({ method, args = [] }) =>
+    new Promise((resolve) => {
+      queue.push({ method, args, resolve });
+      process();
+    });
 
   return { send, process };
 };

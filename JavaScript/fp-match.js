@@ -6,17 +6,20 @@ const match = (variant, handlers) => handlers[variant.tag](variant);
 
 const createPoint = (x, y) => Object.freeze({ tag: 'point', x, y });
 
-const move = (instance, dx, dy) => match(instance, {
-  point: ({ x, y }) => createPoint(x + dx, y + dy),
-});
+const move = (instance, dx, dy) =>
+  match(instance, {
+    point: ({ x, y }) => createPoint(x + dx, y + dy),
+  });
 
-const clone = (instance) => match(instance, {
-  point: ({ x, y }) => createPoint(x, y),
-});
+const clone = (instance) =>
+  match(instance, {
+    point: ({ x, y }) => createPoint(x, y),
+  });
 
-const toString = (instance) => match(instance, {
-  point: ({ x, y }) => `(${x}, ${y})`,
-});
+const toString = (instance) =>
+  match(instance, {
+    point: ({ x, y }) => `(${x}, ${y})`,
+  });
 
 // Usage
 
