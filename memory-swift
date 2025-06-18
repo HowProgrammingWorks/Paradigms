@@ -1,0 +1,38 @@
+import Foundation
+
+final class SharedPoint {
+    private var x: Int32
+    private var y: Int32
+    private let lock = DispatchQueue(label: "sharedpoint-queue")
+
+    init(x: Int32, y: Int32) {
+        self.x = x
+        self.y = y
+    }
+
+    func move(dx: Int32, dy: Int32) {
+        lock.sync {
+            x &+= dx
+            y &+= dy
+        }
+    }
+
+    func clone() -> SharedPoint {
+        return lock.sync {
+            return SharedPoint(x: x, y: y)
+        }
+    }
+
+    func toString() -> String {
+        return lock.sync {
+            return "(\(x), \(y))"
+        }
+    }
+}
+
+let p1 = SharedPoint(x: 10, y: 20)
+print(p1.toString())  // (10, 20)
+
+let c1 = p1.clone()
+c1.move(dx: -5, dy: 10)
+print(c1.toString())  // (5, 30)
