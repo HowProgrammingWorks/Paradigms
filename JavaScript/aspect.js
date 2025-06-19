@@ -9,9 +9,9 @@ class Point {
     this.#y = y;
   }
 
-  move(x, y) {
-    this.#x += x;
-    this.#y += y;
+  move(dx, dy) {
+    this.#x += dx;
+    this.#y += dy;
   }
 
   clone() {
@@ -34,8 +34,8 @@ const aspect = (target, methodName, { before, after }) => {
 };
 
 aspect(Point.prototype, 'move', {
-  before(x, y) {
-    console.log(`Before move: ${this.toString()} moving by (${x},${y})`);
+  before(dx, dy) {
+    console.log(`Before move: ${this.toString()} moving by (${dx},${dy})`);
   },
   after() {
     console.log(`After move: ${this.toString()}`);

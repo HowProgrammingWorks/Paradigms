@@ -6,9 +6,9 @@ class Point {
     this.y = y;
   }
 
-  static move(point, x, y) {
-    point.x += x;
-    point.y += y;
+  static move(point, dx, dy) {
+    point.x += dx;
+    point.y += dy;
   }
 
   static clone({ x, y }) {

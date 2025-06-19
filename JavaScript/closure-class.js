@@ -1,9 +1,9 @@
 'use strict';
 
 class Point {
-  constructor(ax, ay) {
-    this.x = ax;
-    this.y = ay;
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
 		const move = (dx, dy) => {
 			this.x += dx;
 			this.y += dy;

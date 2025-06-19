@@ -11,9 +11,9 @@ class Point {
     this.#y = y;
   }
 
-  #move(x, y) {
-    this.#x += x;
-    this.#y += y;
+  #move(dx, dy) {
+    this.#x += dx;
+    this.#y += dy;
   }
 
   #clone() {
@@ -35,8 +35,8 @@ class Point {
     if (this.#processing) return;
     this.#processing = true;
     while (this.#queue.length) {
-      const { method, x, y, resolve } = this.#queue.shift();
-      if (method === 'move') resolve(this.#move(x, y));
+      const { method, x: dx, y: dy, resolve } = this.#queue.shift();
+      if (method === 'move') resolve(this.#move(dx, dy));
       if (method === 'clone') resolve(this.#clone());
       if (method === 'toString') resolve(this.#toString());
     }
