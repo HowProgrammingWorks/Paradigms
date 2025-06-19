@@ -4,14 +4,13 @@ class Point {
   constructor(ax, ay) {
     this.x = ax;
     this.y = ay;
+		const move = (dx, dy) => {
+			this.x += dx;
+			this.y += dy;
+		};
     const clone = () => new Point(this.x, this.y);
     const toString = () => `(${this.x}, ${this.y})`;
-    return { clone, toString };
-  }
-
-  move(dx, dy) {
-    this.x += dx;
-    this.y += dy;
+    return { move, clone, toString };
   }
 }
 
