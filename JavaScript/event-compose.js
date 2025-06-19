@@ -11,9 +11,9 @@ class Point {
     this.#y = y;
     this.emitter = new EventEmitter();
 
-    this.emitter.on('move', ({ x, y }) => {
-      this.#x += x;
-      this.#y += y;
+    this.emitter.on('move', ({ x: dx, y: dy }) => {
+      this.#x += dx;
+      this.#y += dy;
     });
 
     this.emitter.on('clone', (callback) => {

@@ -13,9 +13,9 @@ proto.clone = function () {
   return createPoint(this.x, this.y);
 };
 
-proto.move = function (x, y) {
-  this.x += x;
-  this.y += y;
+proto.move = function (dx, dy) {
+  this.x += dx;
+  this.y += dy;
 };
 
 proto.toString = function () {
