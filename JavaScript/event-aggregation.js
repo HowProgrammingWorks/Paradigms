@@ -3,36 +3,42 @@
 const { EventEmitter } = require('node:events');
 
 class Point {
+  static #bus = new EventEmitter();
+
   #x;
   #y;
+  #id;
 
-  constructor({ x, y }, emitter) {
+  constructor({ x, y }) {
     this.#x = x;
     this.#y = y;
+    this.#id = Symbol('point');
 
-    emitter.on('move', ({ x, y }) => {
+    Point.#bus.on(`move:${this.#id.description}`, ({ x, y }) => {
       this.#x += x;
       this.#y += y;
+      return this;
     });
 
-    emitter.on('clone', (callback) => {
-      const point = new Point({ x: this.#x, y: this.#y }, emitter);
-      callback(point);
-    });
+    Point.#bus.on(`clone:${this.#id.description}`, () => new Point({ x: this.#x, y: this.#y }));
 
-    emitter.on('toString', (callback) => {
-      callback(`(${this.#x}, ${this.#y})`);
-    });
+    Point.#bus.on(`toString:${this.#id.description}`, () => `(${this.#x}, ${this.#y})`);
+  }
+
+  emit(type, payload) {
+    const listener = Point.#bus.listeners(`${type}:${this.#id.description}`)[0];
+    if (!listener) throw new Error(`Unknown event: ${type}`);
+    return listener(payload);
   }
 }
 
 // Usage
 
-const emitter = new EventEmitter();
-const p1 = new Point({ x: 10, y: 20 }, emitter);
-emitter.emit('toString', console.log);
-emitter.emit('clone', (c0) => {
-  emitter.emit('toString', console.log);
-  emitter.emit('move', { x: -5, y: 10 });
-  emitter.emit('toString', console.log);
-});
+const p1 = new Point({ x: 10, y: 20 });
+console.log(p1.emit('toString'));
+
+const c1 = p1.emit('clone');
+console.log(c1.emit('toString'));
+
+c1.emit('move', { x: -5, y: 10 });
+console.log(c1.emit('toString'));
