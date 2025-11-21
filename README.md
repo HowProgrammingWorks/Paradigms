@@ -45,9 +45,51 @@
   
 1. Control Flow
   - Statements, algorithm steps
+    ```js
+    const user = read({ id: 15 });
+    if (user.name === 'marcus') {
+      console.log(user.age);
+    }
+    ```
   - Expression
-  - Command-style
+    ```js
+    ({ id }) => (fn) => fn({ id, name: 'marcus', age: 42 })
+      ({ id: 15 })(({ name, age }) => name === 'marcus' ? (log) => log(age) : () => {})
+        (console.log);
+    ```
+  - Do-notation
+    ```js
+    Do({ id: 15 })
+      .chain(({ id }) => ({ id, name: 'marcus', age: 42 }))
+      .chain(({ name, age }) => name === 'marcus' ? (log) => log(age) : () => {})
+      .run()(console.log);
+    ```
   - Declarative style
+    ```js
+    execute({
+      read: { id: 15 },
+      then: {
+        match: { name: 'marcus' },
+        success: { effect: { log: 'age' } },
+        fail: { effect: 'noop' },
+      },
+    })(reader, console.log)();
+    ```
+  - Pipeline operator
+    ```js
+    (({ id: 15 })
+      |> read
+      |> (({ name, age }) => name === 'marcus' ? (log) => log(age) : () => {})
+    )(console.log);
+    ```
+  - Pipe (composition)
+    ```js
+    pipe(
+      { id: 15 },
+      read,
+      ({ name, age }) => name === 'marcus' ? (log) => log(age) : () => {}
+    )(console.log);
+    ```
 2. Identifiers
   - Assignment statement
   - Call arguments
