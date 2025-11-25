@@ -18,7 +18,11 @@ function PointTransform(fn) {
 
 function Serialized(data) {
   const map = (fn) => fn(data);
-  return { map };
+  const tap = (fn) => {
+    fn(data);
+    return { map, tap };
+  };
+  return { map, tap };
 }
 
 const move = (d) => ({ x, y }) => ({ x: x + d.x, y: y + d.y });
@@ -28,8 +32,8 @@ const toString = ({ x, y }) => new Serialized(`(${x}, ${y})`);
 // Usage
 
 const p1 = Point.of({ x: 10, y: 20 });
-p1.chain(toString).map(console.log);
+p1.chain(toString).tap(console.log);
 const c0 = p1.map(clone);
 const t1 = new PointTransform(move({ x: -5, y: 10 }));
 const c1 = t1.ap(c0);
-c1.chain(toString).map(console.log);
+c1.chain(toString).tap(console.log);
