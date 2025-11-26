@@ -59,7 +59,7 @@ const toString = ({ x, y }) => `(${x}, ${y})`;
 const readPoint = () => IO.of(() => ({ x: 10, y: 20 }));
 const writeLine = (text) => IO.of(() => console.log(text));
 
-const p1 = readPoint().chain((p) => Monad.of(p));
+const p1 = readPoint().map(Monad.of).run();
 p1.map(toString).chain(writeLine).run();
 const c0 = p1.map(clone);
 const t1 = Monad.of(move({ x: -5, y: 10 }));
