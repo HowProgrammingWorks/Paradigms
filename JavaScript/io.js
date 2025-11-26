@@ -12,11 +12,11 @@ class IO {
   }
 
   map(fn) {
-    return new IO(() => fn(this.#effect()));
+    return IO.of(() => fn(this.run()));
   }
 
   chain(fn) {
-    return new IO(() => fn(this.#effect()).run());
+    return fn(this.run());
   }
 
   run() {
@@ -52,22 +52,16 @@ class Monad {
 
 const move = (d) => ({ x, y }) => ({ x: x + d.x, y: y + d.y });
 const clone = ({ x, y }) => ({ x, y });
-const toString = ({ x, y }) => IO.of(() => `(${x}, ${y})`);
+const toString = ({ x, y }) => `(${x}, ${y})`;
 
 // Usage
 
-const input = IO.of(() => Monad.of({ x: 10, y: 20 }));
+const readPoint = () => IO.of(() => ({ x: 10, y: 20 }));
+const writeLine = (text) => IO.of(() => console.log(text));
 
-input
-  .chain((monad) => monad.chain(toString))
-  .map(console.log)
-  .run();
-
-const c0 = input.chain((monad) => IO.of(() => monad.map(clone)));
-const c1 = c0.chain((monad) =>
-  IO.of(() => Monad.of(move({ x: -5, y: 10 })).ap(monad)),
-);
-
-c1.chain((monad) => monad.chain(toString))
-  .map(console.log)
-  .run();
+const p1 = readPoint().chain((p) => Monad.of(p));
+p1.map(toString).chain(writeLine).run();
+const c0 = p1.map(clone);
+const t1 = Monad.of(move({ x: -5, y: 10 }));
+const c1 = t1.ap(c0);
+c1.map(toString).chain(writeLine).run();
