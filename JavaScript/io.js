@@ -50,7 +50,10 @@ class Monad {
   }
 }
 
-const move = (delta) => (point) => ({ x: point.x + delta.x, y: point.y + delta.y });
+const move = (delta) => (point) => ({
+  x: point.x + delta.x,
+  y: point.y + delta.y,
+});
 const clone = (point) => ({ ...point });
 const toString = (point) => `(${point.x}, ${point.y})`;
 

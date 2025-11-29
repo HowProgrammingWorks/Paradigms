@@ -6,7 +6,6 @@ const createIO = (effect) => ({
   run: () => effect(),
 });
 
-
 const createMonad = (value) => ({
   map: (fn) => {
     const v = structuredClone(value);
@@ -19,8 +18,10 @@ const createMonad = (value) => ({
   ap: (container) => container.map(value),
 });
 
-
-const move = (delta) => (point) => ({ x: point.x + delta.x, y: point.y + delta.y });
+const move = (delta) => (point) => ({
+  x: point.x + delta.x,
+  y: point.y + delta.y,
+});
 const clone = (point) => ({ ...point });
 const toString = (point) => `(${point.x}, ${point.y})`;
 
