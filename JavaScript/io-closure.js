@@ -2,33 +2,36 @@
 
 const createIO = (effect) => ({
   map: (fn) => createIO(() => fn(effect())),
-  chain: (fn) => createIO(() => fn(effect()).run()),
+  chain: (fn) => fn(effect()),
   run: () => effect(),
 });
 
-const createPoint = (x, y) => ({
+
+const createMonad = (value) => ({
   map: (fn) => {
-    const coord = fn(x, y);
-    return createPoint(coord.x, coord.y);
+    const v = structuredClone(value);
+    return createMonad(fn(v));
   },
-  chain: (fn) => fn(x, y),
+  chain: (fn) => {
+    const v = structuredClone(value);
+    return fn(v);
+  },
+  ap: (container) => container.map(value),
 });
 
-const createTransform = (fn) => ({
-  ap: (point) => point.map(fn),
-});
 
-const move = (dx, dy) => (x, y) => ({ x: x + dx, y: y + dy });
-const cloneP = (x, y) => ({ x, y });
-const toString = (x, y) => createIO(() => `(${x}, ${y})`);
+const move = (delta) => (point) => ({ x: point.x + delta.x, y: point.y + delta.y });
+const clone = (point) => ({ ...point });
+const toString = (point) => `(${point.x}, ${point.y})`;
 
 // Usage
 
-const p1 = createPoint(10, 20);
-p1.chain(toString).map(console.log).run();
+const readPoint = () => createIO(() => ({ x: 10, y: 20 }));
+const writeLine = (text) => createIO(() => console.log(text));
 
-const c0 = p1.map(cloneP);
-const t1 = createTransform(move(-5, 10));
+const p1 = readPoint().map(createMonad).run();
+p1.map(toString).chain(writeLine).run();
+const c0 = p1.map(clone);
+const t1 = createMonad(move({ x: -5, y: 10 }));
 const c1 = t1.ap(c0);
-
-c1.chain(toString).map(console.log).run();
+c1.map(toString).chain(writeLine).run();
