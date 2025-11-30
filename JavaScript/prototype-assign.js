@@ -4,9 +4,9 @@ const clone = function () {
   return new Point(this.x, this.y);
 };
 
-const move = function (x, y) {
-  this.x += x;
-  this.y += y;
+const move = function (dx, dy) {
+  this.x += dx;
+  this.y += dy;
 };
 
 const toString = function () {
