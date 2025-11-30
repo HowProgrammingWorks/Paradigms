@@ -37,7 +37,7 @@ class Trait {
   }
 
   implement(target, callable) {
-    if (typeof target !== 'object') {
+    if (typeof target !== 'object' || target === null) {
       throw new TypeError(`Target is not Object`);
     }
     if (typeof callable !== 'function') {
