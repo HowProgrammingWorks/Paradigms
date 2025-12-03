@@ -7,14 +7,8 @@ const createIO = (effect) => ({
 });
 
 const createMonad = (value) => ({
-  map: (fn) => {
-    const v = structuredClone(value);
-    return createMonad(fn(v));
-  },
-  chain: (fn) => {
-    const v = structuredClone(value);
-    return fn(v);
-  },
+  map: (fn) => createMonad(fn(structuredClone(value))),
+  chain: (fn) => fn(structuredClone(value)),
   ap: (container) => container.map(value),
 });
 
