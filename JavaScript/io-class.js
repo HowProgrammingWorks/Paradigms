@@ -86,14 +86,11 @@ class Point {
 
 const readPoint = () => IO.of(() => Point.of(10, 20));
 const writeLine = (text) => IO.of(() => console.log(text));
+const toString = (point) => point.toString();
 
 const p1 = readPoint().map(Monad.of).run();
-p1.map((point) => point.toString())
-  .chain(writeLine)
-  .run();
+p1.map(toString).chain(writeLine).run();
 const c0 = p1.map((point) => point.clone());
 const t1 = Monad.of((point) => point.move(Point.of(-5, 10)));
 const c1 = t1.ap(c0);
-c1.map((point) => point.toString())
-  .chain(writeLine)
-  .run();
+c1.map(toString).chain(writeLine).run();
