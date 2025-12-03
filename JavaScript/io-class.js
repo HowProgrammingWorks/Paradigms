@@ -12,15 +12,39 @@ class IO {
   }
 
   map(fn) {
-    return new IO(() => fn(this.#effect()));
+    return IO.of(() => fn(this.run()));
   }
 
   chain(fn) {
-    return new IO(() => fn(this.#effect()).run());
+    return fn(this.run());
   }
 
   run() {
     return this.#effect();
+  }
+}
+
+class Monad {
+  #value;
+
+  constructor(value) {
+    this.#value = value;
+  }
+
+  static of(value) {
+    return new Monad(value);
+  }
+
+  map(fn) {
+    return Monad.of(fn(this.#value));
+  }
+
+  chain(fn) {
+    return fn(this.#value);
+  }
+
+  ap(container) {
+    return container.map(this.#value);
   }
 }
 
@@ -37,35 +61,39 @@ class Point {
     return new Point(x, y);
   }
 
-  map(fn) {
-    const { x, y } = fn(this.#x, this.#y);
-    return Point.of(x, y);
+  get x() {
+    return this.#x;
   }
 
-  chain(fn) {
-    return fn(this.#x, this.#y);
+  get y() {
+    return this.#y;
+  }
+
+  move(delta) {
+    return Point.of(this.#x + delta.x, this.#y + delta.y);
+  }
+
+  clone() {
+    return Point.of(this.#x, this.#y);
+  }
+
+  toString() {
+    return `(${this.#x}, ${this.#y})`;
   }
 }
-
-class PointTransform {
-  constructor(fn) {
-    this.fn = fn;
-  }
-
-  ap(point) {
-    return point.map(this.fn);
-  }
-}
-
-const move = (dx, dy) => (x, y) => ({ x: x + dx, y: y + dy });
-const clone = (x, y) => ({ x, y });
-const toString = (x, y) => IO.of(() => `(${x}, ${y})`);
 
 // Usage
 
-const p1 = Point.of(10, 20);
-p1.chain(toString).map(console.log).run();
-const c0 = p1.map(clone);
-const t1 = new PointTransform(move(-5, 10));
+const readPoint = () => IO.of(() => Point.of(10, 20));
+const writeLine = (text) => IO.of(() => console.log(text));
+
+const p1 = readPoint().map(Monad.of).run();
+p1.map((point) => point.toString())
+  .chain(writeLine)
+  .run();
+const c0 = p1.map((point) => point.clone());
+const t1 = Monad.of((point) => point.move(Point.of(-5, 10)));
 const c1 = t1.ap(c0);
-c1.chain(toString).map(console.log).run();
+c1.map((point) => point.toString())
+  .chain(writeLine)
+  .run();
