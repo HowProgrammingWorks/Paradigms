@@ -14,9 +14,9 @@ class Point {
     }
   }
 
-  move(x, y) {
-    Atomics.add(this.view, 0, x);
-    Atomics.add(this.view, 1, y);
+  move(dx, dy) {
+    Atomics.add(this.view, 0, dx);
+    Atomics.add(this.view, 1, dy);
   }
 
   clone() {

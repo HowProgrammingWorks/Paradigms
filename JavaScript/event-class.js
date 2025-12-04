@@ -9,9 +9,9 @@ class Point {
     this.#x = x;
     this.#y = y;
     this.#events = {
-      move: ({ x, y }) => {
-        this.#x += x;
-        this.#y += y;
+      move: ({ x: dx, y: dy }) => {
+        this.#x += dx;
+        this.#y += dy;
       },
       clone: () => new Point({ x: this.#x, y: this.#y }),
       toString: () => `(${this.#x}, ${this.#y})`,

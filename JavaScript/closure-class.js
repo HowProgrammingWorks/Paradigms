@@ -1,17 +1,16 @@
 'use strict';
 
 class Point {
-  constructor(ax, ay) {
-    this.x = ax;
-    this.y = ay;
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+		const move = (dx, dy) => {
+			this.x += dx;
+			this.y += dy;
+		};
     const clone = () => new Point(this.x, this.y);
     const toString = () => `(${this.x}, ${this.y})`;
-    return { clone, toString };
-  }
-
-  move(dx, dy) {
-    this.x += dx;
-    this.y += dy;
+    return { move, clone, toString };
   }
 }
 

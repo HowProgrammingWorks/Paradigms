@@ -10,9 +10,9 @@ class Point {
     this.#x = x;
     this.#y = y;
 
-    emitter.on('move', ({ x, y }) => {
-      this.#x += x;
-      this.#y += y;
+    emitter.on('move', ({ x: dx, y: dy }) => {
+      this.#x += dx;
+      this.#y += dy;
     });
 
     emitter.on('clone', (callback) => {
