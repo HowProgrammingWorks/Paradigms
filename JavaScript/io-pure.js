@@ -12,12 +12,11 @@ const createMonad = (value) => ({
   ap: (container) => container.map(value),
 });
 
-const createPoint = (x, y) => (fn) => fn(x, y);
+const createPoint = (x, y) => (map) => map(x, y);
 
-const move = (dx, dy) => (point) =>
-  point((x, y) => createPoint(x + dx, y + dy));
-const clone = (point) => point((x, y) => createPoint(x, y));
-const toString = (point) => point((x, y) => `(${x}, ${y})`);
+const move = (dx, dy) => (map) => map((x, y) => createPoint(x + dx, y + dy));
+const clone = (map) => map((x, y) => createPoint(x, y));
+const toString = (map) => map((x, y) => `(${x}, ${y})`);
 
 // Usage
 
