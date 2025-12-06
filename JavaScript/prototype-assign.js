@@ -1,6 +1,6 @@
 'use strict';
 
-const validate = (x, y) => {
+const validatePoint = (x, y) => {
   const errors = [];
   if (!Number.isFinite(x)) errors.push(new TypeError(`Invalid x: ${x}`));
   if (!Number.isFinite(y)) errors.push(new TypeError(`Invalid y: ${y}`));
@@ -21,7 +21,7 @@ const toString = function () {
 };
 
 function Point(x, y) {
-  const errors = validate(x, y);
+  const errors = validatePoint(x, y);
   if (errors.length > 0) {
     const cause = new AggregateError(errors, 'Validation');
     throw new RangeError('Bad coordinates', { cause });
