@@ -1,6 +1,19 @@
-type Coords = { x: number; y: number };
+type Coords = Record<string, number>;
+type Coords2d = { x: number; y: number };
 
-function addVectors<T extends Record<string, number>>(a: T, b: T): T {
+const validatePoint = <T extends Coords>(coords: T): Error[] => {
+  const errors: Error[] = [];
+  if (typeof coords === 'object' && coords !== null) {
+    for (const [key, value] of Object.entries(coords)) {
+      if (typeof value === 'number' && !Number.isFinite(value)) {
+        errors.push(new TypeError(`Invalid ${key}: ${value}`));
+      }
+    }
+  }
+  return errors;
+};
+
+function addVectors<T extends Coords>(a: T, b: T): T {
   const result = {} as T;
   for (const key of Object.keys(a) as Array<keyof T>) {
     result[key] = (a[key] + b[key]) as T[typeof key];
@@ -8,10 +21,15 @@ function addVectors<T extends Record<string, number>>(a: T, b: T): T {
   return result;
 }
 
-class Point<T extends Record<string, number>> {
+class Point<T extends Coords> {
   #coords: T;
 
   constructor(coords: T) {
+    const errors = validatePoint(coords);
+    if (errors.length > 0) {
+      const cause = new AggregateError(errors, 'Validation');
+      throw new RangeError('Bad coordinates', { cause });
+    }
     this.#coords = coords;
   }
 
@@ -30,7 +48,7 @@ class Point<T extends Record<string, number>> {
 
 // Usage
 
-const p1 = new Point<Coords>({ x: 10, y: 20 });
+const p1 = new Point<Coords2d>({ x: 10, y: 20 });
 console.log(p1.toString());
 p1.move({ x: -5, y: 10 });
 console.log(p1.toString());
