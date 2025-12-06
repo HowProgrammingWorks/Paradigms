@@ -4,6 +4,13 @@ class Point {
   static SIZE = 8;
 
   constructor(x, y, view = null) {
+    if (!view) {
+      const errors = Point.validate(x, y);
+      if (errors.length > 0) {
+        const cause = new AggregateError(errors, 'Validation');
+        throw new RangeError('Bad coordinates', { cause });
+      }
+    }
     const buffer = new SharedArrayBuffer(Point.SIZE);
     this.view = new Int32Array(buffer);
     if (view) {
@@ -12,6 +19,13 @@ class Point {
       this.view[0] = x;
       this.view[1] = y;
     }
+  }
+
+  static validate(x, y) {
+    const errors = [];
+    if (!Number.isFinite(x)) errors.push(new TypeError(`Invalid x: ${x}`));
+    if (!Number.isFinite(y)) errors.push(new TypeError(`Invalid y: ${y}`));
+    return errors;
   }
 
   move(x, y) {
