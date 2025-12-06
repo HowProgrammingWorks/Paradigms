@@ -1,17 +1,23 @@
 'use strict';
 
 class Point {
-  constructor(ax, ay) {
-    this.x = ax;
-    this.y = ay;
+  constructor(x, y) {
+    const errors = [];
+    if (!Number.isFinite(x)) errors.push(new TypeError(`Invalid x: ${x}`));
+    if (!Number.isFinite(y)) errors.push(new TypeError(`Invalid y: ${y}`));
+    if (errors.length > 0) {
+      const cause = new AggregateError(errors, 'Validation');
+      throw new RangeError('Bad coordinates', { cause });
+    }
+    this.x = x;
+    this.y = y;
+    const move = (dx, dy) => {
+      this.x += dx;
+      this.y += dy;
+    };
     const clone = () => new Point(this.x, this.y);
     const toString = () => `(${this.x}, ${this.y})`;
-    return { clone, toString };
-  }
-
-  move(dx, dy) {
-    this.x += dx;
-    this.y += dy;
+    return { clone, toString, move };
   }
 }
 

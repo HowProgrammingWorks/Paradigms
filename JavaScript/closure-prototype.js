@@ -1,14 +1,21 @@
 'use strict';
 
-function Point(ax, ay) {
-  let x = ax;
-  let y = ay;
+function Point(x, y) {
+  const errors = [];
+  if (!Number.isFinite(x)) errors.push(new TypeError(`Invalid x: ${x}`));
+  if (!Number.isFinite(y)) errors.push(new TypeError(`Invalid y: ${y}`));
+  if (errors.length > 0) {
+    const cause = new AggregateError(errors, 'Validation');
+    throw new RangeError('Bad coordinates', { cause });
+  }
+  this.x = x;
+  this.y = y;
   const move = (dx, dy) => {
-    x += dx;
-    y += dy;
+    this.x += dx;
+    this.y += dy;
   };
-  const clone = () => new Point(x, y);
-  const toString = () => `(${x}, ${y})`;
+  const clone = () => new Point(this.x, this.y);
+  const toString = () => `(${this.x}, ${this.y})`;
   return { move, clone, toString };
 }
 

@@ -1,6 +1,13 @@
 'use strict';
 
 const createPoint = (ax, ay) => {
+  const errors = [];
+  if (!Number.isFinite(ax)) errors.push(new TypeError(`Invalid x: ${ax}`));
+  if (!Number.isFinite(ay)) errors.push(new TypeError(`Invalid y: ${ay}`));
+  if (errors.length > 0) {
+    const cause = new AggregateError(errors, 'Validation');
+    throw new RangeError('Bad coordinates', { cause });
+  }
   let x = ax;
   let y = ay;
   const move = (dx, dy) => {
