@@ -3,7 +3,16 @@
 const PointDSL = {
   [Symbol.for('tag')]: 'point',
 
-  create: ({ x, y }) => ({ x, y }),
+  create: ({ x, y }) => {
+    const errors = [];
+    if (!Number.isFinite(x)) errors.push(new TypeError(`Invalid x: ${x}`));
+    if (!Number.isFinite(y)) errors.push(new TypeError(`Invalid y: ${y}`));
+    if (errors.length > 0) {
+      const cause = new AggregateError(errors, 'Validation');
+      throw new RangeError('Bad coordinates', { cause });
+    }
+    return { x, y };
+  },
   clone: ({ point }) => ({ x: point.x, y: point.y }),
   move: ({ point, dx, dy }) => ({ x: point.x + dx, y: point.y + dy }),
   toString: ({ point }) => `(${point.x}, ${point.y})`,

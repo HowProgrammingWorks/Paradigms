@@ -5,8 +5,20 @@ class Point {
   #y;
 
   constructor(x, y) {
+    const errors = Point.validate(x, y);
+    if (errors.length > 0) {
+      const cause = new AggregateError(errors, 'Validation');
+      throw new RangeError('Bad coordinates', { cause });
+    }
     this.#x = x;
     this.#y = y;
+  }
+
+  static validate(x, y) {
+    const errors = [];
+    if (!Number.isFinite(x)) errors.push(new TypeError(`Invalid x: ${x}`));
+    if (!Number.isFinite(y)) errors.push(new TypeError(`Invalid y: ${y}`));
+    return errors;
   }
 
   move(x, y) {

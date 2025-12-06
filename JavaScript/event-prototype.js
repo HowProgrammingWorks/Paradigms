@@ -1,6 +1,18 @@
 'use strict';
 
+const validatePoint = (x, y) => {
+  const errors = [];
+  if (!Number.isFinite(x)) errors.push(new TypeError(`Invalid x: ${x}`));
+  if (!Number.isFinite(y)) errors.push(new TypeError(`Invalid y: ${y}`));
+  return errors;
+};
+
 function Point({ x, y }) {
+  const errors = validatePoint(x, y);
+  if (errors.length > 0) {
+    const cause = new AggregateError(errors, 'Validation');
+    throw new RangeError('Bad coordinates', { cause });
+  }
   const move = (d) => {
     x += d.x;
     y += d.y;
