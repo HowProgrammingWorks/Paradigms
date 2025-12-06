@@ -26,7 +26,22 @@ class Observable {
   }
 }
 
-const createPoint = (x, y) => new Observable({ x, y });
+const validate = (x, y) => {
+  const errors = [];
+  if (!Number.isFinite(x)) errors.push(new TypeError(`Invalid x: ${x}`));
+  if (!Number.isFinite(y)) errors.push(new TypeError(`Invalid y: ${y}`));
+  return errors;
+};
+
+const createPoint = (x, y) => {
+  const errors = validate(x, y);
+  if (errors.length > 0) {
+    const cause = new AggregateError(errors, 'Validation');
+    throw new RangeError('Bad coordinates', { cause });
+  }
+  return new Observable({ x, y });
+};
+
 const move = (point, dx, dy) =>
   point.map(({ x, y }) => ({ x: x + dx, y: y + dy }));
 const clone = (point) => new Observable({ ...point.value });
