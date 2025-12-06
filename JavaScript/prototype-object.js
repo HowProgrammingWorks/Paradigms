@@ -1,5 +1,12 @@
 'use strict';
 
+const validate = (x, y) => {
+  const errors = [];
+  if (!Number.isFinite(x)) errors.push(new TypeError(`Invalid x: ${x}`));
+  if (!Number.isFinite(y)) errors.push(new TypeError(`Invalid y: ${y}`));
+  return errors;
+};
+
 const PointPrototype = {
   move(dx, dy) {
     this.x += dx;
@@ -17,6 +24,11 @@ const PointPrototype = {
 };
 
 const createPoint = (x, y) => {
+  const errors = validate(x, y);
+  if (errors.length > 0) {
+    const cause = new AggregateError(errors, 'Validation');
+    throw new RangeError('Bad coordinates', { cause });
+  }
   const point = Object.create(PointPrototype);
   point.x = x;
   point.y = y;
