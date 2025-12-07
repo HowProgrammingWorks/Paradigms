@@ -1,10 +1,24 @@
 'use strict';
 
+const validatePoint = (x, y) => {
+  const errors = [];
+  if (!Number.isFinite(x)) errors.push(new TypeError(`Invalid x: ${x}`));
+  if (!Number.isFinite(y)) errors.push(new TypeError(`Invalid y: ${y}`));
+  return errors;
+};
+
 const match = (variant, handlers) => handlers[variant.tag](variant);
 
 // Implementation
 
-const createPoint = (x, y) => Object.freeze({ tag: 'point', x, y });
+const createPoint = (x, y) => {
+  const errors = validatePoint(x, y);
+  if (errors.length > 0) {
+    const cause = new AggregateError(errors, 'Validation');
+    throw new RangeError('Bad coordinates', { cause });
+  }
+  return Object.freeze({ tag: 'point', x, y });
+};
 
 const move = (instance, dx, dy) =>
   match(instance, {

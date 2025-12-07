@@ -1,7 +1,21 @@
 'use strict';
 
+const validatePoint = (x, y) => {
+  const errors = [];
+  if (!Number.isFinite(x)) errors.push(new TypeError(`Invalid x: ${x}`));
+  if (!Number.isFinite(y)) errors.push(new TypeError(`Invalid y: ${y}`));
+  return errors;
+};
+
 const point = {
-  create: (x, y) => Object.freeze({ x, y }),
+  create: (x, y) => {
+    const errors = validatePoint(x, y);
+    if (errors.length > 0) {
+      const cause = new AggregateError(errors, 'Validation');
+      throw new RangeError('Bad coordinates', { cause });
+    }
+    return Object.freeze({ x, y });
+  },
   move: ({ x, y }, dx, dy) => ({ x: x + dx, y: y + dy }),
   clone: ({ x, y }) => point.create(x, y),
   toString: ({ x, y }) => `(${x}, ${y})`,
