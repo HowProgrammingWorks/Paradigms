@@ -12,7 +12,21 @@ const createMonad = (value) => ({
   ap: (container) => container.map(value),
 });
 
-const createPoint = (x, y) => (map) => map(x, y);
+const validatePoint = (x, y) => {
+  const errors = [];
+  if (!Number.isFinite(x)) errors.push(new TypeError(`Invalid x: ${x}`));
+  if (!Number.isFinite(y)) errors.push(new TypeError(`Invalid y: ${y}`));
+  return errors;
+};
+
+const createPoint = (x, y) => {
+  const errors = validatePoint(x, y);
+  if (errors.length > 0) {
+    const cause = new AggregateError(errors, 'Validation');
+    throw new RangeError('Bad coordinates', { cause });
+  }
+  return (map) => map(x, y);
+};
 
 const move = (dx, dy) => (map) => map((x, y) => createPoint(x + dx, y + dy));
 const clone = (map) => map((x, y) => createPoint(x, y));

@@ -50,6 +50,22 @@ class Monad {
   }
 }
 
+const validatePoint = (x, y) => {
+  const errors = [];
+  if (!Number.isFinite(x)) errors.push(new TypeError(`Invalid x: ${x}`));
+  if (!Number.isFinite(y)) errors.push(new TypeError(`Invalid y: ${y}`));
+  return errors;
+};
+
+const createPoint = (x, y) => {
+  const errors = validatePoint(x, y);
+  if (errors.length > 0) {
+    const cause = new AggregateError(errors, 'Validation');
+    throw new RangeError('Bad coordinates', { cause });
+  }
+  return { x, y };
+};
+
 const move = (delta) => (point) => ({
   x: point.x + delta.x,
   y: point.y + delta.y,
@@ -59,7 +75,7 @@ const toString = (point) => `(${point.x}, ${point.y})`;
 
 // Usage
 
-const readPoint = () => IO.of(() => ({ x: 10, y: 20 }));
+const readPoint = () => IO.of(() => createPoint(10, 20));
 const writeLine = (text) => IO.of(() => console.log(text));
 
 const p1 = readPoint().map(Monad.of).run();
